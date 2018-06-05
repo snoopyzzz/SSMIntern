@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zz.dao.EmployeeMapper" >
+
+	<!-- 所有部门的所有评判 -->
+	<select id="selectPro" resultType="Employee">
+		select
+		<include refid="Base_Column_List"/>
+		from employee e
+		where
+		case
+		when e.department_id='A' then 
+			(case   
+				when e.level &lt; 4 then DATEDIFF(CURRENT_DATE(),e.promote_time) &gt; 365 
+				when e.level &gt; 3 then DATEDIFF(CURRENT_DATE(),e.promote_time) &gt; 730 
+			end )
+		when e.department_id='B' then DATEDIFF(CURRENT_DATE(),e.promote_time) &gt; 730 
+		when e.department_id='C' then DATEDIFF(CURRENT_DATE(),e.promote_time) &gt; 730 
+		when e.department_id='D' then DATEDIFF(CURRENT_DATE(),e.promote_time) &gt; 1095 
+		when e.department_id='E' then DATEDIFF(CURRENT_DATE(),e.promote_time) &gt; 1825 
+		end  
+	</select>
+
+ 	<!-- 批量修改升职人员 -->
+	<update id="updateLevel" parameterType="java.util.List">
+		update employee
+		<set>
+			promote_time = CURRENT_DATE(),
+			level = level + 1
+		</set>
+		where id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			${item.id}
+		</foreach>
+	</update>
+
+	<select id="selectAll" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List"></include>
+		from employee
+	</select>
+	
+  <resultMap id="BaseResultMap" type="com.zz.entity.Employee" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="entry_time" property="entryTime" jdbcType="DATE" />
+    <result column="promote_time" property="promoteTime" jdbcType="DATE" />
+    <result column="level" property="level" jdbcType="INTEGER" />
+    <result column="department_id" property="departmentId" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    id, name, phone, entry_time, promote_time, level, department_id
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.zz.entity.EmployeeExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from employee
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from employee
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from employee
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.zz.entity.EmployeeExample" >
+    delete from employee
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.zz.entity.Employee" >
+    insert into employee (id, name, phone, 
+      entry_time, promote_time, level, 
+      department_id)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR}, 
+      #{entryTime,jdbcType=DATE}, #{promoteTime,jdbcType=DATE}, #{level,jdbcType=INTEGER}, 
+      #{departmentId,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zz.entity.Employee" >
+    insert into employee
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="phone != null" >
+        phone,
+      </if>
+      <if test="entryTime != null" >
+        entry_time,
+      </if>
+      <if test="promoteTime != null" >
+        promote_time,
+      </if>
+      <if test="level != null" >
+        level,
+      </if>
+      <if test="departmentId != null" >
+        department_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null" >
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="entryTime != null" >
+        #{entryTime,jdbcType=DATE},
+      </if>
+      <if test="promoteTime != null" >
+        #{promoteTime,jdbcType=DATE},
+      </if>
+      <if test="level != null" >
+        #{level,jdbcType=INTEGER},
+      </if>
+      <if test="departmentId != null" >
+        #{departmentId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.zz.entity.EmployeeExample" resultType="java.lang.Integer" >
+    select count(*) from employee
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update employee
+    <set >
+      <if test="record.id != null" >
+        id = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.name != null" >
+        name = #{record.name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.phone != null" >
+        phone = #{record.phone,jdbcType=VARCHAR},
+      </if>
+      <if test="record.entryTime != null" >
+        entry_time = #{record.entryTime,jdbcType=DATE},
+      </if>
+      <if test="record.promoteTime != null" >
+        promote_time = #{record.promoteTime,jdbcType=DATE},
+      </if>
+      <if test="record.level != null" >
+        level = #{record.level,jdbcType=INTEGER},
+      </if>
+      <if test="record.departmentId != null" >
+        department_id = #{record.departmentId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update employee
+    set id = #{record.id,jdbcType=INTEGER},
+      name = #{record.name,jdbcType=VARCHAR},
+      phone = #{record.phone,jdbcType=VARCHAR},
+      entry_time = #{record.entryTime,jdbcType=DATE},
+      promote_time = #{record.promoteTime,jdbcType=DATE},
+      level = #{record.level,jdbcType=INTEGER},
+      department_id = #{record.departmentId,jdbcType=VARCHAR}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zz.entity.Employee" >
+    update employee
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null" >
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="entryTime != null" >
+        entry_time = #{entryTime,jdbcType=DATE},
+      </if>
+      <if test="promoteTime != null" >
+        promote_time = #{promoteTime,jdbcType=DATE},
+      </if>
+      <if test="level != null" >
+        level = #{level,jdbcType=INTEGER},
+      </if>
+      <if test="departmentId != null" >
+        department_id = #{departmentId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zz.entity.Employee" >
+    update employee
+    set name = #{name,jdbcType=VARCHAR},
+      phone = #{phone,jdbcType=VARCHAR},
+      entry_time = #{entryTime,jdbcType=DATE},
+      promote_time = #{promoteTime,jdbcType=DATE},
+      level = #{level,jdbcType=INTEGER},
+      department_id = #{departmentId,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

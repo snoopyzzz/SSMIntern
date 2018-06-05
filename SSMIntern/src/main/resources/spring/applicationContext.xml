@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:tx="http://www.springframework.org/schema/tx"   
+       xmlns:task="http://www.springframework.org/schema/task" 
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans.xsd 
+       http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd 
+       http://www.springframework.org/schema/tx 
+       http://www.springframework.org/schema/tx/spring-tx.xsd">  
+         
+ 
+    <!--数据源-链接数据库的基本信息,这里直接写,不放到*.properties资源文件中-->  
+     
+      
+    <bean id="dataSource"  
+          class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">  
+        <property name="driverClass" value="com.mysql.jdbc.Driver" />  
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/ssmintern?allowMultiQueries=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;useAffectedRows=true"/>  
+        <property name="user" value="root" />  
+        <property name="password" value="123456" />  
+         <property name="maxPoolSize" value="40" />      <!--最大连接数-->
+        <property name="minPoolSize" value="1" />       <!--最小连接数-->
+        <property name="initialPoolSize" value="10" />      <!--初始化连接池内的数据库连接-->
+        <property name="maxIdleTime" value="20" />  <!--最大空闲时间-->
+    </bean>  
+    <!-- 配置数据源,加载配置,也就是dataSource -->  
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">  
+        <property name="dataSource" ref="dataSource"></property>  
+        <!--mybatis的配置文件-->  
+        <property name="configLocation" value="classpath:mybatis/mybatis-config.xml" />  
+        <!--扫描 XXXmapper.xml映射文件,配置扫描的路径-->  
+        <property name="mapperLocations" value="classpath:com/zz/mapper/*.xml"></property>  
+    </bean>  
+    <!-- DAO接口所在包名，Spring会自动查找之中的类 -->  
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">  
+        <property name="basePackage" value="com.zz.dao" />  
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>  
+    </bean>  
+  
+  <!-- 定时器 -->
+     <task:annotation-driven scheduler="myScheduler"/>         
+     <task:scheduler id="myScheduler" pool-size="5"/>     
+  
+    <!--事务管理-->  
+    <bean id="transactionManager"  
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
+        <!--注入dataSource-->  
+        <property name="dataSource" ref="dataSource" />  
+    </bean>  
+    <!--开启事务注解扫描-->  
+    <tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>  
+</beans>  
